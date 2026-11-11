@@ -101,14 +101,17 @@ export const coloringStateField = StateField.define<DecorationSet>({
 
 			for (const txEffect of transaction.effects) {
 				if (txEffect.is(coloringStateEffects.removeColorEffect)) {
+					// Only drop the decoration for this exact range. Matching on a shared
+					// boundary would also drop neighbouring resolvables (e.g. a zero-length
+					// plaintext segment at the start of "World" would erase its highlight).
 					colorings = colorings.update({
-						filter: (from, to) => txEffect.value.from !== from && txEffect.value.to !== to,
+						filter: (from, to) => txEffect.value.from !== from || txEffect.value.to !== to,
 					});
 				}
 
 				if (txEffect.is(coloringStateEffects.addColorEffect)) {
 					colorings = colorings.update({
-						filter: (from, to) => txEffect.value.from !== from && txEffect.value.to !== to,
+						filter: (from, to) => txEffect.value.from !== from || txEffect.value.to !== to,
 					});
 
 					const decoration = resolvableStateToDecoration[txEffect.value.state ?? 'pending'];
